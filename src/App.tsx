@@ -4,11 +4,16 @@ import InputField from "./components/InputField";
 import TodoList from "./components/TodoList";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { Todo } from "./models/models";
+import FirebaseAuth from "./firebase/FirebaseAuth";
+import { AuthProvider } from "./firebase/authProvider";
+import { useAuth } from "./firebase/authProvider";
 
 const App: React.FC = () => {
   const [todo, setTodo] = useState<string>("");
   const [todos, setTodos] = useState<Array<Todo>>([]);
   const [CompletedTodos, setCompletedTodos] = useState<Array<Todo>>([]);
+
+  const { user, loading, logout } = useAuth();
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,19 +63,27 @@ const App: React.FC = () => {
     setTodos(active);
   };
 
+  if (loading) return null;
+  if (!user) return <FirebaseAuth />;
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="App">
-        <span className="heading">Taskify</span>
-        <InputField todo={todo} setTodo={setTodo} handleAdd={handleAdd} />
-        <TodoList
-          todos={todos}
-          setTodos={setTodos}
-          CompletedTodos={CompletedTodos}
-          setCompletedTodos={setCompletedTodos}
-        />
-      </div>
-    </DragDropContext>
+    <AuthProvider>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="App">
+          <span className="heading">Taskify</span>
+          <button type="button" onClick={logout} className="userbutton">
+            Logout
+          </button>
+          <InputField todo={todo} setTodo={setTodo} handleAdd={handleAdd} />
+          <TodoList
+            todos={todos}
+            setTodos={setTodos}
+            CompletedTodos={CompletedTodos}
+            setCompletedTodos={setCompletedTodos}
+          />
+        </div>
+      </DragDropContext>
+    </AuthProvider>
   );
 };
 
